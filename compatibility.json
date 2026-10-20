@@ -1,0 +1,20 @@
+{
+  "version": "4.0.827",
+  "revision": 7,
+  "originalSha256": "b2ce8c54dc5c991feef3a24e1880ced57ba88a0f40a687a5b082187ac0a1cca6",
+  "patchedSha256": "8ea2ba3fc59fe79236158034f3c67be436e265c155d8b8268fb0f9e72aca2eb7",
+  "previousPatchedSha256": [
+    "037d30c728efc8d927ee54be42201f35b78e589e297d08c79cd5d3106e3b57b4",
+    "a4e6ba86ddf539e99c0cc69fd74e6c39d3f8ba97a9b7b6c500e45da6921a0697",
+    "fc4264c7b4d74dec6bc0749f857ee2f4ff96e77b3aad68adf9a545fce60e8cd2",
+    "f5adc989f506eb73d88980480749336fc66fbfdb8cff1d29e8f60856958d6aef",
+    "30debf475c01767b4cbeb73a3bc2534220c14e004906d2b9c98ad5b05e1a7826",
+    "98bd2178d35625dedf8e81c7389b8140e2192122f57c40bcec9a76d4d79df0c5"
+  ],
+  "changedFiles": [
+    "electron/main.js",
+    "electron/preload.js",
+    "electron/components/Tab/Tab.js"
+  ],
+  "verifiedPackedEntries": 10063
+}
