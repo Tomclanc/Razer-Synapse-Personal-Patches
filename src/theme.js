@@ -23,6 +23,14 @@
   const contrast = view.matchMedia('(forced-colors: active)');
   const styleId = 'local-razer-system-theme';
   const isLight=()=>preference==='light'||(preference==='system'&&light.matches);
+  const isTray=/^\/systray\/systrayv2(?:\/|$)/.test(view.location.pathname||'');
+  const trayShape=`
+    html,body,#root{background:transparent!important}
+    .systray{border-radius:12px!important;overflow:hidden!important}
+    .dropdown-razer{border-radius:10px!important;padding:5px!important}
+    .dropdown-razer .dropdown-item{border-radius:6px!important}
+    .tooltip-razer>.main>.wrapper{border-radius:8px!important}
+  `;
   let bootStyle,bootTimer,bootObserver;
   function releaseBoot() {
     if(bootStyle){bootStyle.remove();bootStyle=null;}
@@ -236,7 +244,7 @@
     scheduled=false;
     visitFrames();
     mountSettings();updateSettings();
-    if(!sheet || !isLight() || contrast.matches) { if(sheet)sheet.textContent=''; releaseBoot();return; }
+    if(!sheet || !isLight() || contrast.matches) { if(sheet)sheet.textContent=isTray&&!contrast.matches?trayShape:''; releaseBoot();return; }
     let css=':root{color-scheme:light}html,body{background-color:#f2f5f8;color:#27313e}\n';
     let inaccessible=false;
     for(const source of document.styleSheets) {
@@ -297,6 +305,22 @@
       .widget-prod.dot-bg .dim-corner {
         background:linear-gradient(90deg,rgba(237,242,246,.85),transparent 18%,transparent 82%,rgba(237,242,246,.85)) !important;
       }
+    `;
+    if(isTray)css+=trayShape+`
+      .systray{background:#f5f7fa!important;border:1px solid #cbd5df!important;color:#233043!important}
+      .systray>.header,.systray>.apps{background:#fff!important}
+      .systray .app-section-title,.systray .navbar{background:#edf2f6!important;border-color:#d9e1e8!important}
+      .systray>.header .username,.synapse>.devices>li>.info>.profile{color:#233043!important}
+      .synapse>.devices>li>.info>.title,.systray>.apps>li>.title{color:#536579!important}
+      .synapse>.devices>li:hover{background:#e7eef4!important}
+      .synapse>.devices>li>.icon,.synapse>.devices>li>svg{filter:brightness(.42)!important}
+      .synapse>.devices>li>.battery:not(.batt-off) .icon{filter:brightness(.42)!important}
+      .synapse>.devices>li>.battery>.label{color:#345c46!important;font-weight:500}
+      .synapse>.devices>li>.battery.low-batt>.label{color:#b42332!important}
+      .synapse>.devices>li>.battery.charging>.label,.synapse>.devices>li>.battery.charging-100>.label{color:#23723d!important}
+      .synapse>.devices>li>.info>.profile:hover{color:#23723d!important}
+      .dropdown-razer{background:#fff!important;border-color:#cbd5df!important;box-shadow:0 6px 18px #23304324!important}
+      .dropdown-razer .dropdown-item:hover{background:#e7eef4!important}
     `;
     sheet.textContent=`@media (forced-colors:none){${css}}`;
     if(document.readyState!=='loading'&&!document.querySelector('.rz-init-loader'))releaseBoot();

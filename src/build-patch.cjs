@@ -46,6 +46,12 @@ function walk(dir,prefix='') {
         .replace(background,"this.tab.setBackgroundColor(require('electron').nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8')"));
       changed.push(namePath);
     }
+    if(namePath==='electron/components/Tab/LeftSystray.js') {
+      const text=data.toString(),options='hasShadow:!1,resizable:!1';
+      if(text.split(options).length!==2)throw Error('Unexpected tray window options');
+      data=Buffer.from(text.replace(options,'hasShadow:!0,resizable:!1,transparent:!0,backgroundColor:"#00000000",roundedCorners:!0'));
+      changed.push(namePath);
+    }
     if(changed.includes(namePath)) {
       new vm.Script(data.toString());
       if(entry.integrity) {
@@ -61,7 +67,19 @@ function walk(dir,prefix='') {
   }
 }
 walk(tree);
-if(changed.length!==3)throw Error('Missing patch targets');
+if(changed.length!==4)throw Error('Missing patch targets');
+const additions={
+  'local-tray-menu.js':'tray-menu.cjs','local-tray-preload.js':'tray-preload.cjs',
+  'local-tray-renderer.js':'tray-renderer.js','local-tray-menu.html':'tray-menu.html'
+};
+for(const[name,source]of Object.entries(additions)) {
+  if(tree.files.electron.files[name])throw Error('Existing tray patch entry '+name);
+  const data=fs.readFileSync(path.join(root,'src',source));
+  if(name.endsWith('.js'))new vm.Script(data.toString());
+  tree.files.electron.files[name]={size:data.length,offset:String(offset),
+    integrity:{algorithm:'SHA256',hash:hash(data),blockSize:4194304,blocks:[hash(data)]}};
+  offset+=data.length;payloads.push(data);changed.push('electron/'+name);
+}
 const json=Buffer.from(JSON.stringify(tree));
 const headerLength=4+Math.ceil((4+json.length)/4)*4;
 const header=Buffer.alloc(8+headerLength);
@@ -71,17 +89,24 @@ const patched=Buffer.concat([header,...payloads]);
 // Verify every packed entry against the original except the intended changes.
 const check=parse(patched),old=parse(original);
 let verified=0;
-function verify(dir,oldDir) {
+function verify(dir,oldDir,prefix='') {
   for(const[name,e]of Object.entries(dir.files)) {
+    const fullName=prefix+name;
     const prev=oldDir.files[name];
-    if(e.files){verify(e,prev);continue;}
+    if(e.files){verify(e,prev,fullName+'/');continue;}
     if(e.unpacked||e.link)continue;
     const current=patched.subarray(check.base+Number(e.offset),check.base+Number(e.offset)+e.size);
+    if(!prev) {
+      if(prefix!=='electron/'||!additions[name]||hash(current)!==hash(fs.readFileSync(path.join(root,'src',additions[name]))))
+        throw Error('Unexpected added entry '+fullName);
+      verified++;continue;
+    }
     const before=original.subarray(old.base+Number(prev.offset),old.base+Number(prev.offset)+prev.size);
     if(hash(current)!==hash(before)) {
       if(!((name==='main.js'&&current.includes(Buffer.from('local-razer-theme-set'))) ||
            (name==='preload.js'&&current.includes(Buffer.from('local-razer-system-theme'))) ||
-           (name==='Tab.js'&&current.includes(Buffer.from("theme.removeListener('updated',paint)")))))throw Error('Unexpected changed entry '+name);
+           (fullName==='electron/components/Tab/Tab.js'&&current.includes(Buffer.from("theme.removeListener('updated',paint)"))) ||
+           (fullName==='electron/components/Tab/LeftSystray.js'&&current.includes(Buffer.from('roundedCorners:!0')))))throw Error('Unexpected changed entry '+name);
     }
     verified++;
   }
@@ -92,7 +117,7 @@ fs.copyFileSync(path.join(root,'src/theme.js'),output+'theme-source.js');
 fs.copyFileSync(path.join(root,'src/theme-main.js'),output+'theme-main-source.js');
 fs.copyFileSync(path.join(root,'src/theme-tab.js'),output+'theme-tab-source.js');
 const previous=compatibility;
-fs.writeFileSync(output+'manifest.json',JSON.stringify({version:'4.0.827',revision:7,originalSha256:hash(original),patchedSha256:hash(patched),previousPatchedSha256:[...new Set([...(previous.previousPatchedSha256||[]),previous.patchedSha256])],changedFiles:changed,verifiedPackedEntries:verified},null,2));
+fs.writeFileSync(output+'manifest.json',JSON.stringify({version:'4.0.827',revision:8,originalSha256:hash(original),patchedSha256:hash(patched),previousPatchedSha256:[...new Set([...(previous.previousPatchedSha256||[]),previous.patchedSha256])],changedFiles:changed,verifiedPackedEntries:verified},null,2));
 console.log({changed,verified,originalSha256:hash(original),patchedSha256:hash(patched)});
 
 for(const name of ['Apply-Theme.ps1','INSTALL.cmd','RESTORE.cmd','Cleanup-History.ps1','CLEANUP.cmd'])fs.copyFileSync(path.join(root,'templates',name),path.join(output,name));

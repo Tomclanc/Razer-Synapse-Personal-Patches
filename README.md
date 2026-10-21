@@ -12,6 +12,10 @@
 - 浅色背景、卡片、文字、设备展示区域和标签页关闭按钮的配色。
 - 主题选择菜单的圆角和选中状态。
 - 新标签页的初始背景，减少先黑后白的闪烁。
+- 托盘设备面板的浅灰图标改为深灰，电量文字使用深绿，低电量保留红色提示；应用 Logo 和头像保持原样。
+- 托盘面板、配置下拉菜单以及右键菜单增加圆角；右键菜单跟随外观主题，支持方向键、Home/End、Enter 和 Escape。
+
+右键菜单复用原有菜单项和操作回调。不支持的菜单类型、系统高对比度模式或本地菜单加载失败时使用原生菜单。
 
 目标是界面外观，不涉及设备驱动和固件。安装脚本会关闭雷云主程序，请先结束正在进行的编辑。
 
@@ -80,7 +84,7 @@ resources/app.asar.before-system-theme
 
 ## 源码与测试
 
-`src/theme.js` 为页面主题和设置界面，`src/theme-main.js` 负责本地偏好及窗口主题，`src/theme-tab.js` 负责标签页初始背景。`src/build-patch.cjs` 在原始归档中修改三个明确的目标文件，并重新计算归档完整性信息。
+`src/theme.js` 为页面主题和设置界面，`src/theme-main.js` 负责本地偏好及窗口主题，`src/theme-tab.js` 负责标签页初始背景。`src/tray-menu.cjs`、`src/tray-preload.cjs`、`src/tray-renderer.js` 和 `src/tray-menu.html` 实现圆角右键菜单。`src/build-patch.cjs` 修改四个明确的目标文件并添加四个本地菜单文件，重新计算归档完整性信息。
 
 ```sh
 npm test
