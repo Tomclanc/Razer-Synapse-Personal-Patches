@@ -5,6 +5,9 @@
   const file=path.join(app.getPath('userData'),'local-appearance.json');
   const modes=new Set(['system','light','dark']);
   let mode='system';
+  try {require('./local-tray-menu').install();} catch(error) {console.warn('Tray appearance unavailable:',error);}
+  const windowColor=win=>win.__localRazerTrayMenu||/\/systray\/systrayv2(?:\/|$)/.test(win.webContents?.getURL?.()||'')?
+    '#00000000':nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8';
   try {const saved=JSON.parse(fs.readFileSync(file,'utf8'));if(modes.has(saved.mode))mode=saved.mode;}catch{}
   function trusted(event,settingsOnly=false) {
     try {
@@ -15,9 +18,8 @@
     } catch {return false;}
   }
   function updateWindows() {
-    const color=nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8';
     for(const win of BrowserWindow.getAllWindows()) {
-      if(!win.isDestroyed())win.setBackgroundColor(color);
+      if(!win.isDestroyed())win.setBackgroundColor(windowColor(win));
     }
     for(const content of webContents.getAllWebContents()) {
       if(!content.isDestroyed())content.send('local-razer-theme-changed',mode);
@@ -39,7 +41,7 @@
   });
   nativeTheme.on('updated',updateWindows);
   app.on('browser-window-created',(_event,win)=>{
-    const paint=()=>{if(!win.isDestroyed())win.setBackgroundColor(nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8');};
+    const paint=()=>{if(!win.isDestroyed())win.setBackgroundColor(windowColor(win));};
     paint();
     win.webContents.on('did-start-loading',paint);
   });

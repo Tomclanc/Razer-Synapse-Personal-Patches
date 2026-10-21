@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:;">
+<style>
+:root{color-scheme:light;--surface:#f8fafc;--text:#233043;--line:#cbd5df;--hover:#e5eee8;--focus:#23723d}
+:root.dark{color-scheme:dark;--surface:#24272b;--text:#e7ecf1;--line:#424950;--hover:#34463b;--focus:#83ce91}
+*{box-sizing:border-box}html,body{margin:0;background:transparent;font:14px "Segoe UI","Microsoft YaHei",sans-serif;user-select:none}
+body{padding:3px}#menu{padding:5px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);max-height:calc(100vh - 6px);overflow-y:auto}
+button{display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;white-space:nowrap;cursor:default}
+button:hover,button:focus-visible{background:var(--hover);outline:none}button:focus-visible{box-shadow:inset 3px 0 var(--focus)}button:disabled{opacity:.45;background:transparent;box-shadow:none}
+.icon{width:20px;height:20px;object-fit:contain;flex-shrink:0}.mono{filter:brightness(.42)}.dark .mono{filter:brightness(1.5)}.label{overflow:hidden;text-overflow:ellipsis}
+hr{margin:4px 6px;border:0;border-top:1px solid var(--line)}
+</style></head><body><div id="menu" role="menu" aria-label="Razer Synapse"></div><script src="local-tray-renderer.js"></script></body></html>
