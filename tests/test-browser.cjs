@@ -14,10 +14,17 @@ const fs=require('fs'),assert=require('assert');
       .dot-bg,.dot-background--wireless{position:relative;height:100px}
       .dot-background--wireless{background:#222}
       .device{position:absolute;left:48%;top:30%;width:30px;height:100px;background:#111}
+      .body-widgets .widget,.s3-modal--body{background:#111;border:1px solid #444;margin:12px 0;padding:12px}
+      .widget .button,.s3-dropdown{background:#222;color:#ccc;border:1px solid #555;padding:6px 12px}
+      .dropdown-razer-2{background:#111;padding:6px;margin-top:6px}
+      .dropdown-item{background:#333;padding:6px}
     </style></head><body><main id="body-wrapper">
       <div class="widget-prod dot-bg"><div class="dim-corner"></div><div class="device"></div></div>
       <div class="config-wrapper dot-bg"><div class="config-block"><img id="product-art" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='black'/%3E%3C/svg%3E"></div><div class="dim-corner"></div></div>
       <div id="multipleBrightness"><div class="dot-background--wireless"><div class="custom-dim-corner"></div></div></div>
+      <div class="body-widgets"><div class="widget">Card <button class="button">Action</button><input type="range"><span class="check-box" style="border-radius:2px">Checkbox</span><span class="tip">Tooltip</span></div></div>
+      <div class="s3-modal--body">Dialog</div><div class="s3-dropdown">Select</div>
+      <div class="dropdown-razer-2"><div class="dropdown-item">Option</div></div>
     </main></body></html>`;
     await context.route('https://apps.razer.com/**',route=>route.fulfill({body:html,contentType:'text/html'}));
     await context.addInitScript(()=>{
@@ -41,6 +48,13 @@ const fs=require('fs'),assert=require('assert');
     await selector.waitFor();
     const selected=page.locator('#local-razer-appearance select');
     const choose=async(mode)=>{await selector.click();await page.locator(`.theme-option[data-value="${mode}"]`).click();};
+    const checkCorners=async()=>{
+      for(const [target,radius] of [['.widget-prod','12px'],['.config-wrapper.dot-bg','12px'],['.dot-background--wireless','12px'],['.custom-dim-corner','12px'],['.body-widgets .widget','12px'],['.widget .button','8px'],['.s3-modal--body','16px'],['.s3-dropdown','8px'],['.dropdown-razer-2','10px'],['.dropdown-item','6px']])
+        assert.equal(await page.locator(target).evaluate(el=>getComputedStyle(el).borderRadius),radius,target);
+      assert.equal(await page.locator('.body-widgets .widget').evaluate(el=>getComputedStyle(el).overflow),'visible','Tooltips must not be clipped');
+      assert.equal(await page.locator('.check-box').evaluate(el=>getComputedStyle(el).borderRadius),'2px');
+      assert.equal(await page.locator('input[type=range]').evaluate(el=>getComputedStyle(el).borderRadius),'0px');
+    };
     assert.equal(await selected.inputValue(),'system');
     await page.waitForFunction(()=>!document.getElementById('local-razer-theme-first-paint'));
     assert.equal(await page.locator('.widget-prod').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(237, 242, 246)');
@@ -52,19 +66,31 @@ const fs=require('fs'),assert=require('assert');
     }
     assert.equal(await page.locator('#product-art').evaluate(el=>getComputedStyle(el).filter),'none');
     const artwork=await page.locator('#product-art').getAttribute('src');
+    await checkCorners();
+    await page.screenshot({path:'test-artifacts/rounded-light.png'});
     await choose('dark');
-    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent==='');
+    await page.waitForFunction(()=>!document.getElementById('local-razer-system-theme').textContent.includes('color-scheme:light'));
+    await checkCorners();
+    await page.screenshot({path:'test-artifacts/rounded-dark.png'});
     assert((await page.locator('.config-wrapper .dim-corner').evaluate(el=>getComputedStyle(el).backgroundImage)).includes('radial-gradient'));
     assert.equal(await page.locator('#product-art').getAttribute('src'),artwork);
     await page.reload();await selector.waitFor();assert.equal(await selected.inputValue(),'dark');
+    await checkCorners();
     await choose('light');
     await page.emulateMedia({colorScheme:'dark'});
     await page.waitForFunction(()=>getComputedStyle(document.querySelector('.widget-prod')).backgroundColor==='rgb(237, 242, 246)');
     assert.equal(await selected.inputValue(),'light');
     await choose('system');
-    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent==='');
+    await page.waitForFunction(()=>!document.getElementById('local-razer-system-theme').textContent.includes('color-scheme:light'));
+    await checkCorners();
     await page.emulateMedia({colorScheme:'light'});
-    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent.includes('.dot-background--wireless'));
+    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent.includes('color-scheme:light'));
+    await checkCorners();
+    await page.emulateMedia({forcedColors:'active'});
+    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent==='');
+    await page.emulateMedia({forcedColors:'none'});
+    await page.waitForFunction(()=>document.getElementById('local-razer-system-theme').textContent.includes('color-scheme:light'));
+    await checkCorners();
     await selector.click();
     assert.equal(await page.getByRole('listbox').evaluate(el=>getComputedStyle(el).borderRadius),'10px');
     await page.keyboard.press('Escape');

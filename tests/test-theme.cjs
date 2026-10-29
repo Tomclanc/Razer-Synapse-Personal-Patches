@@ -58,7 +58,9 @@ for(const text of [[39,49,62],[80,94,110],[105,119,134],[39,112,65]])
 assert(contrastRatio([39,49,62],[104,184,113])>=4.5,'Green control label contrast');
 const before=style.textContent;
 observer([{target:style}]);assert.equal(scheduled,0);
-light.matches=false;light.change();assert.equal(style.textContent,'');
+light.matches=false;light.change();
+assert(style.textContent.includes('border-radius:12px !important'));
+assert(!/background(?:-color|-image)?\s*:/.test(style.textContent));
 light.matches=true;light.change();assert.equal(style.textContent,before);
 contrast.matches=true;contrast.change();assert.equal(style.textContent,'');
 contrast.matches=false;contrast.change();assert.equal(style.textContent,before);
