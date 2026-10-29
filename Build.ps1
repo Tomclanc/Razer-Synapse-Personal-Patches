@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
 if (-not $nodeCommand) { throw 'Node.js 18+ is required. Install Node.js and reopen this script.' }
-$resourceDirectory = 'C:\Program Files\Razer\RazerAppEngine\app-4.0.827\resources'
+$resourceDirectory = 'C:\Program Files\Razer\RazerAppEngine\app-4.0.896\resources'
 $backup = Join-Path $resourceDirectory 'app.asar.before-system-theme'
 $inputArchive = Join-Path $resourceDirectory 'app.asar'
 if (Test-Path -LiteralPath $backup) { $inputArchive = $backup }

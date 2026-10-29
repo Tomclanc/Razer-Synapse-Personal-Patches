@@ -1,6 +1,7 @@
-param([switch]$Restore)
+param([switch]$Restore,[string]$LogPath)
 $ErrorActionPreference = 'Stop'
-$installRoot = 'C:\Program Files\Razer\RazerAppEngine\app-4.0.827'
+if ($LogPath) { Start-Transcript -Path $LogPath -Force | Out-Null }
+$installRoot = 'C:\Program Files\Razer\RazerAppEngine\app-4.0.896'
 $target = Join-Path $installRoot 'resources\app.asar'
 $backup = Join-Path $installRoot 'resources\app.asar.before-system-theme'
 $pending = Join-Path $installRoot 'resources\app.asar.theme-pending'

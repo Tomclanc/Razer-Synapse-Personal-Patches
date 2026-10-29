@@ -1,6 +1,6 @@
 # Razer Synapse Personal Patches
 
-按个人审美修改的雷云 4 界面补丁。
+按个人审美修改的雷云 4 界面补丁，另附本机排查过程中使用的运行时修复工具。
 
 **这只是我自己用的外观修改，没有做很多稳定性测试。建议优先使用雷蛇官方原版。**
 
@@ -12,8 +12,11 @@
 - 浅色背景、卡片、文字、设备展示区域和标签页关闭按钮的配色。
 - 主题选择菜单的圆角和选中状态。
 - 新标签页的初始背景，减少先黑后白的闪烁。
+- 亮色模式下统一鼠标、键盘、接收器等产品展示区的浅色点阵背景，去掉灰黑渐变遮罩，保留产品图片。
 
 目标是界面外观，不涉及设备驱动和固件。安装脚本会关闭雷云主程序，请先结束正在进行的编辑。
+
+2026-10-29 更新：外观补丁已适配 **4.0.896**。旧版 4.0.827 仍可在历史 Release 中查阅，不要混用两版的归档或校验值。键盘文本崩溃、鼠标侧键漏载映射的实验性工具见 [tools/README.md](tools/README.md)，与外观安装分开使用。
 
 ## 简单预览
 
@@ -27,10 +30,10 @@
 
 ## 支持范围
 
-仅面向 Windows 上的 **Razer Synapse / Razer App Engine 4.0.827**，并且原始 `app.asar` 必须匹配：
+仅面向 Windows 上的 **Razer Synapse / Razer App Engine 4.0.896**，并且原始 `app.asar` 必须匹配：
 
 ```text
-b2ce8c54dc5c991feef3a24e1880ced57ba88a0f40a687a5b082187ac0a1cca6
+e7a524aca1771251ca4f851441a97cac1c33929891b291ed34deb7adfc1831ec
 ```
 
 版本号相同不一定表示文件相同。校验不通过就不要强行安装。
@@ -48,7 +51,7 @@ b2ce8c54dc5c991feef3a24e1880ced57ba88a0f40a687a5b082187ac0a1cca6
 默认安装目录：
 
 ```text
-C:\Program Files\Razer\RazerAppEngine\app-4.0.827
+C:\Program Files\Razer\RazerAppEngine\app-4.0.896
 ```
 
 已有本项目旧补丁时，构建脚本会优先读取最初保留的原版备份。不要删除这个备份。
@@ -80,7 +83,7 @@ resources/app.asar.before-system-theme
 
 ## 源码与测试
 
-`src/theme.js` 为页面主题和设置界面，`src/theme-main.js` 负责本地偏好及窗口主题，`src/theme-tab.js` 负责标签页初始背景。`src/build-patch.cjs` 在原始归档中修改三个明确的目标文件，并重新计算归档完整性信息。
+`src/theme.js` 为页面主题和设置界面，`src/theme-main.js` 负责本地偏好及窗口主题，`src/theme-tab.js` 负责标签页初始背景。`src/build-patch.cjs` 在原始归档中修改三个明确的目标文件，并重新计算归档完整性信息。当前归档共校验 10095 个打包条目。
 
 ```sh
 npm test

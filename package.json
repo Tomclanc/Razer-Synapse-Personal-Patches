@@ -1,8 +1,8 @@
 {
   "name": "razer-synapse-personal-patches",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Personal appearance patches for Razer Synapse 4.0.827",
+  "description": "Personal appearance patches and experimental runtime fixes for Razer Synapse 4.0.896",
   "scripts": {
     "test": "node tests/test-theme.cjs && node tests/test-main.cjs && node tests/test-tab.cjs",
     "test:browser": "node tests/test-browser.cjs"

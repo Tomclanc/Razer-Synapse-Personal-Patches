@@ -4,3 +4,9 @@ test-artifacts/
 *.asar
 *.asar.*
 *.log
+**/bin/
+**/obj/
+*.dmp
+private-runtime/
+mouse-runtime-snapshot.json
+*-runtime-snapshot.json

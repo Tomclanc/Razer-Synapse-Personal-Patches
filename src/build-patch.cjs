@@ -92,7 +92,7 @@ fs.copyFileSync(path.join(root,'src/theme.js'),output+'theme-source.js');
 fs.copyFileSync(path.join(root,'src/theme-main.js'),output+'theme-main-source.js');
 fs.copyFileSync(path.join(root,'src/theme-tab.js'),output+'theme-tab-source.js');
 const previous=compatibility;
-fs.writeFileSync(output+'manifest.json',JSON.stringify({version:'4.0.827',revision:7,originalSha256:hash(original),patchedSha256:hash(patched),previousPatchedSha256:[...new Set([...(previous.previousPatchedSha256||[]),previous.patchedSha256])],changedFiles:changed,verifiedPackedEntries:verified},null,2));
+fs.writeFileSync(output+'manifest.json',JSON.stringify({version:compatibility.version,revision:compatibility.revision,originalSha256:hash(original),patchedSha256:hash(patched),previousPatchedSha256:[...new Set([...(previous.previousPatchedSha256||[]),previous.patchedSha256].filter(Boolean))],changedFiles:changed,verifiedPackedEntries:verified},null,2));
 console.log({changed,verified,originalSha256:hash(original),patchedSha256:hash(patched)});
 
 for(const name of ['Apply-Theme.ps1','INSTALL.cmd','RESTORE.cmd','Cleanup-History.ps1','CLEANUP.cmd'])fs.copyFileSync(path.join(root,'templates',name),path.join(output,name));

@@ -1,4 +1,4 @@
-// Local, reversible theme adaptation for Razer App Engine 4.0.827.
+// Local, reversible theme adaptation for Razer App Engine 4.0.896.
 (() => {
   'use strict';
   if (!(location.protocol === 'file:' ||
@@ -287,15 +287,23 @@
       .etabs-tab .btn-close:hover { background-color:#dce5ee !important;color:#27313e !important; }
       .etabs-tab .btn-close:active { background-color:#c8d5e2 !important;color:#202c38 !important; }
     `;
-    // Observed product preview selectors. Preserve the foreground device image.
+    // Shared preview surfaces across mouse, keyboard, dongle and lighting pages.
+    // Product artwork stays untouched; only the dotted surface and shade layers change.
     css+=`
-      .widget-prod.dot-bg {
+      .dot-bg,
+      .dot-background,
+      .dot-background--wireless,
+      #multipleBrightness .dot-background {
         background:radial-gradient(circle,#cbd6df .8px,transparent 1px) 0 0 / 22px 22px,#edf2f6 !important;
         border-radius:8px;
         box-shadow:inset 0 0 0 1px #e1e8ee !important;
       }
-      .widget-prod.dot-bg .dim-corner {
-        background:linear-gradient(90deg,rgba(237,242,246,.85),transparent 18%,transparent 82%,rgba(237,242,246,.85)) !important;
+      .dot-bg .dim-corner,
+      .dot-background .dim-corner,
+      .dot-background--wireless .dim-corner,
+      #multipleBrightness .custom-dim-corner {
+        background:transparent !important;
+        box-shadow:none !important;
       }
     `;
     sheet.textContent=`@media (forced-colors:none){${css}}`;

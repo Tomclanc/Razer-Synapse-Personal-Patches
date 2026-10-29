@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$resourceDirectory = [IO.Path]::GetFullPath('C:\Program Files\Razer\RazerAppEngine\app-4.0.827\resources')
+$resourceDirectory = [IO.Path]::GetFullPath('C:\Program Files\Razer\RazerAppEngine\app-4.0.896\resources')
 $manifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'manifest.json') -Raw | ConvertFrom-Json
 $known = @($manifest.originalSha256, $manifest.patchedSha256) + @($manifest.previousPatchedSha256)
 $targetHash = (Get-FileHash -LiteralPath (Join-Path $resourceDirectory 'app.asar')).Hash
