@@ -23,6 +23,16 @@
   const contrast = view.matchMedia('(forced-colors: active)');
   const styleId = 'local-razer-system-theme';
   const isLight=()=>preference==='light'||(preference==='system'&&light.matches);
+  // Keep the complete antialiased stroke inside the native tray window region.
+  // A fixed overlay follows resizing without changing layout or intercepting input.
+  const trayOutline=()=>view.location?.hostname==='apps.razer.com'&&
+    /^\/systray\/systrayv2\/?$/.test(view.location.pathname)?`
+      html::after {
+        content:"";position:fixed;inset:1px;box-sizing:border-box;
+        border:1px solid ${isLight()?'#c7d1db':'#606060'};
+        border-radius:11px;pointer-events:none;z-index:2147483647;
+      }
+    `:'';
   let bootStyle,bootTimer,bootObserver;
   function releaseBoot() {
     if(bootStyle){bootStyle.remove();bootStyle=null;}
@@ -278,7 +288,7 @@
     visitFrames();
     mountSettings();updateSettings();
     if(!sheet || contrast.matches) { if(sheet)sheet.textContent=''; releaseBoot();return; }
-    if(!isLight()) {sheet.textContent=geometry;releaseBoot();return;}
+    if(!isLight()) {sheet.textContent=geometry+trayOutline();releaseBoot();return;}
     let css=':root{color-scheme:light}html,body{background-color:#f2f5f8;color:#27313e}\n';
     let inaccessible=false;
     for(const source of document.styleSheets) {
@@ -346,7 +356,7 @@
         box-shadow:none !important;
       }
     `;
-    sheet.textContent=`@media (forced-colors:none){${css}\n${geometry}}`;
+    sheet.textContent=`@media (forced-colors:none){${css}\n${geometry}\n${trayOutline()}}`;
     if(document.readyState!=='loading'&&!document.querySelector('.rz-init-loader'))releaseBoot();
   }
   function schedule() {

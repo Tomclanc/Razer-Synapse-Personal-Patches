@@ -106,6 +106,19 @@ const fs=require('fs'),assert=require('assert');
     await page.evaluate(()=>{document.body.innerHTML='<div class="rz-init-loader">Loading</div>';});
     await page.waitForTimeout(1300);
     assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).visibility),'visible');
+    assert.equal(await page.locator('html').evaluate(el=>getComputedStyle(el,'::after').content),'none','No tray outline on other pages');
+    await page.goto('https://apps.razer.com/systray/systrayv2/');
+    await page.setViewportSize({width:360,height:400});
+    const outline=()=>page.locator('html').evaluate(el=>{
+      const s=getComputedStyle(el,'::after');return {radius:s.borderRadius,color:s.borderColor,width:s.borderWidth,pointer:s.pointerEvents,inset:s.top};
+    });
+    assert.deepEqual(await outline(),{radius:'11px',color:'rgb(199, 209, 219)',width:'1px',pointer:'none',inset:'1px'});
+    await page.screenshot({path:'test-artifacts/tray-outline-light.png'});
+    await page.emulateMedia({colorScheme:'dark'});
+    await page.waitForFunction(()=>getComputedStyle(document.documentElement,'::after').borderColor==='rgb(96, 96, 96)');
+    await page.setViewportSize({width:420,height:500});
+    assert.equal((await outline()).radius,'11px');
+    await page.screenshot({path:'test-artifacts/tray-outline-dark.png'});
     assert.deepEqual(errors,[]);
     console.log('PASS: real browser settings UI, persistence, light/dark/system, live OS switch, preview background, first-paint release; no JS errors.');
   } finally {await browser.close();}
