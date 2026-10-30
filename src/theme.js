@@ -23,6 +23,16 @@
   const contrast = view.matchMedia('(forced-colors: active)');
   const styleId = 'local-razer-system-theme';
   const isLight=()=>preference==='light'||(preference==='system'&&light.matches);
+  // Keep the complete antialiased stroke inside the native tray window region.
+  // A fixed overlay follows resizing without changing layout or intercepting input.
+  const trayOutline=()=>view.location?.hostname==='apps.razer.com'&&
+    /^\/systray\/systrayv2\/?$/.test(view.location.pathname)?`
+      html::after {
+        content:"";position:fixed;inset:1px;box-sizing:border-box;
+        border:1px solid ${isLight()?'#c7d1db':'#606060'};
+        border-radius:11px;pointer-events:none;z-index:2147483647;
+      }
+    `:'';
   let bootStyle,bootTimer,bootObserver;
   function releaseBoot() {
     if(bootStyle){bootStyle.remove();bootStyle=null;}
@@ -56,7 +66,7 @@
     const style=document.createElement('style');
     style.textContent=`
       :host{font-family:Roboto,"Microsoft YaHei",sans-serif}
-      .card{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text)}
+      .card{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:20px 24px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text)}
       h2{font-size:16px;margin:0 0 8px;font-weight:500}
       p{font-size:13px;margin:0;color:var(--muted);line-height:1.5}
       .theme-button{min-width:160px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;display:flex;justify-content:space-between;gap:24px;align-items:center;cursor:pointer}
@@ -219,6 +229,47 @@
     }
     return result;
   }
+  // Shared geometry is independent of the light-only palette conversion.
+  // Use observed Synapse surfaces, not every button/input: switches, sliders,
+  // circular icons and the native window controls keep their original shapes.
+  // Do not clip containers: anchored menus, tooltips and artwork can overflow.
+  const geometry=`
+    .body-widgets .widget,
+    .widget-prod,
+    .dot-bg,.dot-background,.dot-background--wireless {
+      border-radius:12px !important;
+    }
+    .dot-bg .dim-corner,
+    .dot-background .dim-corner,
+    .dot-background--wireless .dim-corner,
+    #multipleBrightness .custom-dim-corner {
+      border-radius:12px !important;
+    }
+    .s3-modal--body,
+    .modal-patch-notes .modal-content,
+    .warning-backdrop .popup,
+    .help-component .factory-reset-overlay__dialog {
+      border-radius:16px !important;
+    }
+    .s3-dropdown,.s3-dropdown-with-dual-item,
+    .widget .button,
+    .warning-backdrop .razer-button,
+    .help-component .factory-reset-overlay__button,
+    .main-nav .search-wrapper .search-input,
+    .search-bar .search-wrapper .search-input,
+    input[name=profile] {
+      border-radius:8px !important;
+    }
+    .dropdown-razer-2,.s3-options,.s3-options-with-dual-item {
+      border-radius:10px !important;
+    }
+    .dropdown-razer-2 .dropdown-item,
+    .dropdown-razer-2 .dropdown-item-2,
+    .s3-options .options,.s3-options-with-dual-item .options {
+      border-radius:6px !important;
+    }
+    .etabs-tab .btn-close {border-radius:4px !important;}
+  `;
   let sheet, scheduled=false, counter=0;
   const frames=new WeakSet();
   function visitFrames() {
@@ -236,7 +287,8 @@
     scheduled=false;
     visitFrames();
     mountSettings();updateSettings();
-    if(!sheet || !isLight() || contrast.matches) { if(sheet)sheet.textContent=''; releaseBoot();return; }
+    if(!sheet || contrast.matches) { if(sheet)sheet.textContent=''; releaseBoot();return; }
+    if(!isLight()) {sheet.textContent=geometry+trayOutline();releaseBoot();return;}
     let css=':root{color-scheme:light}html,body{background-color:#f2f5f8;color:#27313e}\n';
     let inaccessible=false;
     for(const source of document.styleSheets) {
@@ -280,7 +332,6 @@
         background-size:11px 11px !important;
         background-position:center !important;
         background-repeat:no-repeat !important;
-        border-radius:4px;
         box-shadow:none !important;
       }
       .etabs-tab .btn-close { background-color:transparent !important; }
@@ -295,7 +346,6 @@
       .dot-background--wireless,
       #multipleBrightness .dot-background {
         background:radial-gradient(circle,#cbd6df .8px,transparent 1px) 0 0 / 22px 22px,#edf2f6 !important;
-        border-radius:8px;
         box-shadow:inset 0 0 0 1px #e1e8ee !important;
       }
       .dot-bg .dim-corner,
@@ -306,7 +356,7 @@
         box-shadow:none !important;
       }
     `;
-    sheet.textContent=`@media (forced-colors:none){${css}}`;
+    sheet.textContent=`@media (forced-colors:none){${css}\n${geometry}\n${trayOutline()}}`;
     if(document.readyState!=='loading'&&!document.querySelector('.rz-init-loader'))releaseBoot();
   }
   function schedule() {
