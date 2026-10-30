@@ -2,7 +2,21 @@
 
 这两个工具与外观补丁分开使用，仅验证过 Windows x64、RazerAppEngine **4.0.896**、`mapping_engine.dll` **1.3.17.2**。不是雷蛇官方修复，也没有做完整稳定性测试。
 
-工具只作用于当前雷云进程。退出并重新启动雷云即可撤销，之后需要重新应用。不会安装后台服务或开机任务，不会替换安装目录的 DLL。
+修复只作用于当前雷云进程，退出并重新启动雷云即可撤销。单独运行修复工具不会设置自启动；下方可选的自动加载器可在新进程启动后重新应用。不会替换安装目录的 DLL。
+
+## 可选：登录后自动加载
+
+`RuntimeAutoLoader` 是当前用户的隐藏后台进程，每 3 秒检查一次雷云，每个映射引擎进程只处理一次。键盘修复在模块就绪后应用；鼠标修复等待指定接收器初始化（最多 120 秒），重新导出最新日志映射后应用。最新映射为空时拒绝回退到旧快照。两项工具仍执行 DLL 哈希校验，不支持的版本会失败并记入日志。
+
+```powershell
+./tools/Install-RuntimeAutoLoader.ps1 -Receiver YOUR-RECEIVER-CONTAINER-GUID
+```
+
+需要 .NET 8 SDK 构建及 .NET 8 Runtime 运行。安装位置为 `%LOCALAPPDATA%\RazerPersonalPatches\RuntimeAutoLoader`，在当前用户 Startup 文件夹创建 `Razer Personal Runtime Fixes.lnk`，无需管理员权限。已登录时立即启动，之后登录自动运行。普通权限加载器不能修复以管理员身份运行的雷云。
+
+`loader.log` 记录每次进程的执行结果。`config.json` 和 `mouse-runtime-snapshot.json` 仅留在本机，不要上传。运行期间更改按键绑定不会触发重复加载；接收器超时或执行失败不会在同一雷云进程内反复注入。
+
+停用方法：在安装目录创建名为 `disabled` 的空文件，后台循环会退出；然后在 Windows 启动应用中禁用该启动项。重启雷云即可撤销已应用的内存修复。它仍是针对指定版本的临时恢复机制，不能保证所有连接、重连或休眠恢复场景。
 
 需要 .NET 8 SDK。以下命令在仓库根目录运行。
 
