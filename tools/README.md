@@ -12,9 +12,13 @@
 ./tools/Install-RuntimeAutoLoader.ps1 -Receiver YOUR-RECEIVER-CONTAINER-GUID
 ```
 
+多只鼠标可使用 `-Receiver @("FIRST-RECEIVER-GUID", "SECOND-RECEIVER-GUID")`。加载器兼容旧的 `receiver` 配置，也支持新的 `receivers` 数组。每个接收器使用独立的 `mouse-runtime-snapshot-<GUID>.json`，某个接收器失败不会阻止其他接收器恢复。
+
+安装器会将登录快捷方式指向实际安装路径，兼容安装宿主的 Windows 应用沙盒路径重定向。每次登录后隐藏运行，每个新雷云映射引擎进程均会重新执行恢复。雷云的登录启动由其官方启动项负责；外观补丁随雷云加载，不依赖本工具。
+
 需要 .NET 8 SDK 构建及 .NET 8 Runtime 运行。安装位置为 `%LOCALAPPDATA%\RazerPersonalPatches\RuntimeAutoLoader`，在当前用户 Startup 文件夹创建 `Razer Personal Runtime Fixes.lnk`，无需管理员权限。已登录时立即启动，之后登录自动运行。普通权限加载器不能修复以管理员身份运行的雷云。
 
-`loader.log` 记录每次进程的执行结果。`config.json` 和 `mouse-runtime-snapshot.json` 仅留在本机，不要上传。运行期间更改按键绑定不会触发重复加载；接收器超时或执行失败不会在同一雷云进程内反复注入。
+`loader.log` 记录每次进程的执行结果。`config.json` 和 `mouse-runtime-snapshot-<GUID>.json` 仅留在本机，不要上传。运行期间更改按键绑定不会触发重复加载；接收器超时或执行失败不会在同一雷云进程内反复注入。
 
 停用方法：在安装目录创建名为 `disabled` 的空文件，后台循环会退出；然后在 Windows 启动应用中禁用该启动项。重启雷云即可撤销已应用的内存修复。它仍是针对指定版本的临时恢复机制，不能保证所有连接、重连或休眠恢复场景。
 
@@ -71,3 +75,5 @@ dotnet run --project tools/MouseRuntimeFix -c Release --no-build -- --snapshot p
 - 鼠标：用户实际测试巴塞利斯蛇侧键，能打开剪贴板历史；按键事件记录确认顺序正常。
 - 公开版本移除了本机接收器常量，并加入快照结构检查；进行了编译及只读校验。
 - 未覆盖其他 DLL 版本、所有鼠标、长期运行、完整关机开机及后续配置变更。
+
+2026-11-02：炼狱蝰蛇 V3 专业版侧键 Win+V 也发生运行时漏载，重新加载该接收器自己的最新映射后，用户确认恢复。双接收器自动加载已在本机验证，完整 Windows 重启尚未测试。

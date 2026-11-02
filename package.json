@@ -5,7 +5,7 @@
   "description": "Personal appearance patches and experimental runtime fixes for Razer Synapse 4.0.896",
   "scripts": {
     "test": "node tests/test-theme.cjs && node tests/test-main.cjs && node tests/test-tab.cjs",
-    "test:browser": "node tests/test-browser.cjs"
+    "test:browser": "node tests/test-browser.cjs && node tests/test-notification-browser.cjs"
   },
   "engines": { "node": ">=18" },
   "devDependencies": { "playwright": "1.62.1" }

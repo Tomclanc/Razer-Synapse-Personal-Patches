@@ -39,12 +39,12 @@ class Program {
   if(automatic){
    string log=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Razer","RazerAppEngine","User Data","Logs","mapping_engine.log");
    bool ready=false;
-   Console.WriteLine("Waiting for the Basilisk receiver in the current engine session...");
+   Console.WriteLine("Waiting for the configured receiver in the current engine session...");
    for(int attempt=0;attempt<60;attempt++){
     try{using var stream=new FileStream(log,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);using var reader=new StreamReader(stream);string text=reader.ReadToEnd();int init=text.LastIndexOf("MappingEngine::Initialize:",StringComparison.Ordinal);if(init>=0){string recent=text[init..];ready=recent.Split('\n').Any(line=>line.Contains("MappingEngineUsbDevice::MappingEngineUsbDevice:")&&line.Contains(receiver,StringComparison.OrdinalIgnoreCase));}}catch(IOException){}
     if(ready)break;Thread.Sleep(1000);
    }
-   if(!ready)throw new Exception("The expected Basilisk receiver was not initialized. Nothing applied.");
+   if(!ready)throw new Exception("The expected configured receiver was not initialized. Nothing applied.");
   }
   var module=process.Modules.Cast<ProcessModule>().Single(m=>m.ModuleName=="mapping_engine.dll");
   if(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(module.FileName)))!="C64E539437B50DA2B1F2E4155D8CBB0FB1C3E1EBAAD894CAF509BAD97E9857F9")throw new Exception("Unexpected DLL version");

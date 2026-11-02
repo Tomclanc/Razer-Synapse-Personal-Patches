@@ -31,8 +31,8 @@ class Program {
    if(d.GetProperty("vendorId").GetInt32()!=5426||d.GetProperty("productId").GetInt32()!=179||profile.GetProperty("appEngine").GetProperty("mappings").GetArrayLength()==0)
     throw new Exception("Latest receiver mapping is empty or incompatible; not replaying older data.");
   }
-  var snapshot=Path.Combine(Root,"mouse-runtime-snapshot.json");File.WriteAllText(snapshot,payload);
-  Log("Selected latest local mapping "+latest);return snapshot;
+  var snapshot=Path.Combine(Root,"mouse-runtime-snapshot-"+receiver.Trim('{','}')+".json");File.WriteAllText(snapshot,payload);
+  Log("Selected latest local mapping "+receiver+" "+latest);return snapshot;
  }
  static async Task<bool> Run(string folder,params string[] args){
   var info=new ProcessStartInfo(Path.Combine(Root,folder,folder+".exe")){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true,WorkingDirectory=Root};
@@ -49,9 +49,12 @@ class Program {
   var handled=new HashSet<string>();
   try{
    using var config=JsonDocument.Parse(File.ReadAllText(Path.Combine(Root,"config.json")));
-   string receiver=config.RootElement.GetProperty("receiver").GetString()!;
-   if(!Guid.TryParse(receiver,out var id))throw new Exception("Invalid receiver GUID");
-   receiver="{"+id.ToString().ToUpperInvariant()+"}";Log("Loader started.");
+   var raw=config.RootElement.TryGetProperty("receivers",out var list)
+    ?list.EnumerateArray().Select(x=>x.GetString()).ToArray()
+    :new[]{config.RootElement.GetProperty("receiver").GetString()};
+   var receivers=raw.Select(value=>Guid.TryParse(value,out var id)?"{"+id.ToString().ToUpperInvariant()+"}":throw new Exception("Invalid receiver GUID")).Distinct().ToArray();
+   if(receivers.Length==0)throw new Exception("No receivers configured");
+   Log("Loader started. Receivers="+receivers.Length);
    while(!File.Exists(Path.Combine(Root,"disabled"))){
     foreach(var process in Process.GetProcessesByName("RazerAppEngine"))using(process){
      try{
@@ -64,6 +67,8 @@ class Program {
       if(!process.Modules.Cast<ProcessModule>().Any(m=>m.ModuleName=="mapping_engine.dll"))continue;
       handled.Add(identity);Log("New mapping engine pid="+process.Id);
       await Run("KeyboardTextFix",Path.Combine(Root,"KeyboardTextFix","patch.json"),process.Id.ToString());
+      foreach(string receiver in receivers){
+      try{
       bool ready=false;
       for(int attempt=0;attempt<120&&!process.HasExited;attempt++){
        try{
@@ -72,11 +77,13 @@ class Program {
        }catch(IOException){}
        if(ready)break;await Task.Delay(1000);
       }
-      if(!ready||process.HasExited){Log("Receiver not ready or engine exited; mouse recovery skipped.");continue;}
+      if(!ready||process.HasExited){Log("Receiver "+receiver+" not ready or engine exited; mouse recovery skipped.");continue;}
       await Task.Delay(3000);
       if(process.HasExited)continue;
       string snapshot=ExportLatest(receiver);
       await Run("MouseRuntimeFix",process.Id.ToString(),snapshot);
+      }catch(Exception e){Log("Receiver "+receiver+" skipped: "+e.Message);}
+      }
       Log("Startup recovery finished for pid="+process.Id);
      }catch(Exception e){Log("Skipped: "+e.Message);}
     }

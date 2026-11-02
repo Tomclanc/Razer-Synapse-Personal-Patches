@@ -41,3 +41,13 @@ url='https://example.com/systray/systrayv2/';webEvents['did-finish-load']();asse
 url='https://apps.razer.com/systray/systrayv2/';windowEvents.show();assert.equal(shapes.length,4);
 destroyed=true;windowEvents.resize();assert.equal(shapes.length,4);
 console.log('PASS: tray native corners, resize, repeat opening, navigation isolation and destroyed-window guard.');
+
+const overlay=create();let overlayURL='https://apps.razer.com/notification-manager/',painted;
+const overlayEvents={};
+const overlayWin={isDestroyed:()=>false,setBackgroundColor:c=>painted=c,on(){},
+ webContents:{getURL:()=>overlayURL,on:(n,f)=>overlayEvents[n]=f}};
+overlay.appEvents['browser-window-created']({},overlayWin);
+assert.equal(painted,'#00000000');
+overlay.nativeTheme.shouldUseDarkColors=true;overlayEvents['dom-ready']();assert.equal(painted,'#00000000');
+overlayURL='https://example.com/notification-manager/';overlayEvents['dom-ready']();assert.equal(painted,'#222222');
+console.log('PASS: notification transparent native background and origin isolation.');

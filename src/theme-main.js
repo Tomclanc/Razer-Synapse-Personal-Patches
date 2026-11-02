@@ -14,10 +14,20 @@
       return !settingsOnly && url.protocol==='file:' && /\/electron\/index\.html$/.test(url.pathname);
     } catch {return false;}
   }
+  function windowColor(win) {
+    // Notification manager is a transparent overlay, including its unused area.
+    // Painting it opaque creates a large rectangle behind the actual toast.
+    try {
+      const url=new URL(win.webContents.getURL());
+      if(url.protocol==='https:'&&url.hostname==='apps.razer.com'&&
+         /^\/notification-manager\/?$/.test(url.pathname))return '#00000000';
+    } catch {}
+    return nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8';
+  }
   function updateWindows() {
     const color=nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8';
     for(const win of BrowserWindow.getAllWindows()) {
-      if(!win.isDestroyed())win.setBackgroundColor(color);
+      if(!win.isDestroyed())win.setBackgroundColor(windowColor(win));
     }
     for(const content of webContents.getAllWebContents()) {
       if(!content.isDestroyed())content.send('local-razer-theme-changed',mode);
@@ -69,10 +79,11 @@
     win.on('resize',roundTray);
     win.on('show',roundTray);
     win.webContents.on('did-finish-load',roundTray);
-    win.webContents.on('did-navigate',roundTray);
-    const paint=()=>{if(!win.isDestroyed())win.setBackgroundColor(nativeTheme.shouldUseDarkColors?'#222222':'#f2f5f8');};
+    win.webContents.on('did-navigate',()=>{roundTray();paint();});
+    const paint=()=>{if(!win.isDestroyed())win.setBackgroundColor(windowColor(win));};
     paint();
     win.webContents.on('did-start-loading',paint);
+    win.webContents.on('dom-ready',paint);
   });
   return mode;
 })()

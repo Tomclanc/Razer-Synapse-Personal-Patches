@@ -33,6 +33,36 @@
         border-radius:11px;pointer-events:none;z-index:2147483647;
       }
     `:'';
+  const notificationPage=()=>view.location?.hostname==='apps.razer.com'&&
+    /^\/notification-manager\/?$/.test(view.location.pathname);
+  function notificationStyle() {
+    const bright=isLight(),high=contrast.matches;
+    // This overlay must stay transparent outside each toast. CSS supplies a
+    // translucent Mica-like surface; it does not enable native DWM Mica.
+    return `
+      :root{color-scheme:${bright?'light':'dark'}}
+      html,body,#root,.app,.notifications{background:transparent!important}
+      .notifications>li{
+        box-sizing:border-box;border-radius:16px!important;overflow:hidden;
+        outline:none!important;border:1px solid ${high?'CanvasText':bright?'#c6ced8':'#565b63'}!important;
+        background:${high?'Canvas':bright?'linear-gradient(135deg,#ffffff66,#e9eef433),rgba(242,245,249,.96)':'linear-gradient(135deg,#ffffff09,#ffffff00),rgba(32,35,40,.96)'}!important;
+        color:${high?'CanvasText':bright?'#27313e':'#edf0f5'}!important;
+        box-shadow:inset 0 1px 0 ${bright?'#ffffff99':'#ffffff0a'};
+      }
+      .notifications>li>.info{background:transparent!important;color:inherit!important}
+      .notifications>li>.info>.header,.notifications>li>.info>.footer-system{
+        color:${high?'LinkText':bright?'#237624':'#69db52'}!important;
+      }
+      .notifications>li>.info>.title,.notifications>li>.info>.body,.notifications>li>.info>.footer{color:inherit}
+      .notifications>li>.info>.btn-close,.notifications .mapping .text,
+      .notifications .dpi>.label>span,.notifications .dpi-2>.label>span{
+        color:${high?'CanvasText':bright?'#526171':'#bac4d0'}!important;
+      }
+      .notifications>li>.btn-close>svg>path{fill:${high?'ButtonText':bright?'#526171':'#bac4d0'}!important}
+      .notifications>li>.btn-close:hover>svg>path{fill:${high?'Highlight':bright?'#237624':'#69db52'}!important}
+      .notifications>li>.info>.header>.icon:not(.immersive){filter:${bright&&!high?'brightness(.58)':'none'}}
+    `;
+  }
   let bootStyle,bootTimer,bootObserver;
   function releaseBoot() {
     if(bootStyle){bootStyle.remove();bootStyle=null;}
@@ -43,7 +73,7 @@
     if(!document.documentElement||bootStyle)return;
     bootStyle=document.createElement('style');
     bootStyle.id='local-razer-theme-first-paint';
-    bootStyle.textContent=isLight()&&!contrast.matches?
+    bootStyle.textContent=notificationPage()?'html,body,#root,.app{background:transparent!important}':isLight()&&!contrast.matches?
       'html{background:#f2f5f8!important;color-scheme:light}body{visibility:hidden!important;background:#f2f5f8!important}':'';
     document.documentElement.appendChild(bootStyle);
     bootTimer=view.setTimeout(releaseBoot,1200);
@@ -287,6 +317,7 @@
     scheduled=false;
     visitFrames();
     mountSettings();updateSettings();
+    if(sheet&&notificationPage()){sheet.textContent=notificationStyle();releaseBoot();return;}
     if(!sheet || contrast.matches) { if(sheet)sheet.textContent=''; releaseBoot();return; }
     if(!isLight()) {sheet.textContent=geometry+trayOutline();releaseBoot();return;}
     let css=':root{color-scheme:light}html,body{background-color:#f2f5f8;color:#27313e}\n';
